@@ -30,6 +30,7 @@ jobs:
           fi
 
       - name: Run cron1.py and save logs
+        working-directory: ${{ github.workspace }}
         run: |
           mkdir -p logs
           python scripts/cron1.py >> logs/cron1.log 2>&1
