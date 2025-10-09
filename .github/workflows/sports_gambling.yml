@@ -1,0 +1,40 @@
+name: Run sports_gambling every 2 hours
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'  # every 2 hours, UTC
+  workflow_dispatch: {}    # allows manual runs for testing
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies (if any)
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ] && [ -s requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run main.py and save logs
+        run: |
+          mkdir -p logs
+          python scripts/sports_gambling/main.py >> logs/main.log 2>&1
+          echo "=== last 50 lines of logs/main.log ==="
+          tail -n 50 logs/main.log || true
+
+      - name: Upload log artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sports-gambling-log
+          path: logs/main.log
+          retention-days: 7
