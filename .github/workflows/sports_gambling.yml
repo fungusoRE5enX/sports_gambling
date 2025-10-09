@@ -11,7 +11,7 @@ jobs:
 
     env:
       ODDS_1: ${{ secrets.ODDS_1 }}
-      ODDS_2: ${{ secrets.ODDS_2 }}  
+      ODDS_2: ${{ secrets.ODDS_2 }}  # optional additional keys
 
     steps:
       - name: Checkout repo
@@ -21,24 +21,5 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          cache: 'pip'
-          cache-dependency-path: requirements.txt
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ] && [ -s requirements.txt ]; then pip install -r requirements.txt; fi
-
-      - name: Run cron1.py and save logs
-        run: |
-          mkdir -p logs
-          python scripts/cron1.py >> logs/cron1.log 2>&1
-          echo "=== last 50 lines of logs/cron1.log ==="
-          tail -n 50 logs/cron1.log || true
-
-      - name: Upload log artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sports-gambling-log
-          path: logs/cron1.log
-          retention-days: 7
+      - name: Install dependencies (if any)
