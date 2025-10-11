@@ -2,44 +2,33 @@ name: Run cron1 every 2 hours
 
 on:
   schedule:
-    - cron: '0 */2 * * *'  # every 2 hours (UTC)
-  workflow_dispatch: {}    # manual trigger
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
-
-    env:
-      ODDS_1: ${{ secrets.ODDS_1 }}
-      ODDS_2: ${{ secrets.ODDS_2 }}  # optional additional keys
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
-      - name: Install dependencies (if any)
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ] && [ -s requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
+          pip install pandas requests
 
-      - name: Run cron1.py and save logs
-        working-directory: ${{ github.workspace }}
+      - name: Run cron1.py and print logs
+        env:
+          ODDS_1: ${{ secrets.ODDS_1 }}
+          ODDS_2: ${{ secrets.ODDS_2 }}
         run: |
           mkdir -p logs
-          python scripts/cron1.py >> logs/cron1.log 2>&1
-          echo "=== last 50 lines of logs/cron1.log ==="
-          tail -n 50 logs/cron1.log || true
-
-      - name: Upload log artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sports-gambling-log
-          path: logs/cron1.log
-          retention-days: 7
+          echo "Running script..."
+          python scripts/cron1.py | tee logs/cron1.log
+          echo "=== END OF LOG OUTPUT ==="
