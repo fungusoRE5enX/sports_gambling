@@ -2,8 +2,8 @@ name: Sports Gambling Cron
 
 on:
   schedule:
-    - cron: "0 */2 * * *"   
-  workflow_dispatch:     
+    - cron: "0 */2 * * *"  # every 2 hours
+  workflow_dispatch:
 
 jobs:
   run-script:
@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true  # needed to push
+          fetch-depth: 0            # fetch full history
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -23,29 +26,15 @@ jobs:
           pip install --upgrade pip
           pip install pandas requests
 
-      - name: Run cron1.py and save logs
+      - name: Run cron1.py
         run: |
-          mkdir -p logs
           mkdir -p data
-          python scripts/cron1.py | tee logs/cron1.log
+          python scripts/cron1.py
 
-      - name: Show generated files
+      - name: Commit new CSVs
         run: |
-          echo "Listing files in data/"
-          ls -R data || echo "No data folder found"
-          echo "Listing logs/"
-          ls -R logs || echo "No logs found"
-
-      - name: Upload log artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sports-gambling-log
-          path: logs/
-          retention-days: 7
-
-      - name: Upload data artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sports-gambling-data
-          path: data/
-          retention-days: 7
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "Add new CSVs from cron run $(date)"
+          git push
