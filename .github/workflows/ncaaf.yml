@@ -33,20 +33,20 @@ jobs:
           echo "ODDS_4=${{ secrets.ODDS_4 }}" >> $GITHUB_ENV
           echo "ODDS_5=${{ secrets.ODDS_5 }}" >> $GITHUB_ENV
 
+      - name: Setup SSH for pushing
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+
       - name: Run cron job
         run: |
           python scripts/cron_ncaaf.py
 
       - name: Commit & push new CSVs
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Configure HTTPS remote with token for authentication
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          
           git add data/ .api_state.json
           git diff --cached --quiet || git commit -m "Add new CSVs & update API state $(date)"
-          git push origin main
+          git push git@github.com:fungusoRE5enX/sports_gambling.git main
