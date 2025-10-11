@@ -1,13 +1,17 @@
-name: Run cron1 every 2 hours
+name: Sports Gambling Cron
 
 on:
   schedule:
-    - cron: "0 */2 * * *"   # every 2 hours
-  workflow_dispatch:          # allows manual trigger
+    - cron: "0 */2 * * *"   # runs every 2 hours
+  workflow_dispatch:         # allows manual runs
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+
+    env:
+      ODDS_1: ${{ secrets.ODDS_1 }}
+      ODDS_2: ${{ secrets.ODDS_2 }}
 
     steps:
       - name: Checkout repo
@@ -16,36 +20,37 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: 3.11
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pandas requests
+          pip install --upgrade pip
+          pip install requests pandas
 
-      - name: Run cron1.py and save logs
-        env:
-          ODDS_1: ${{ secrets.ODDS_1 }}
-          ODDS_2: ${{ secrets.ODDS_2 }}
+      - name: Run cron1.py
         run: |
           mkdir -p logs
-          mkdir -p data
-          echo "Running cron1.py..."
-          python scripts/cron1.py | tee logs/cron1.log
-          echo "=== END OF LOG OUTPUT ==="
+          python scripts/cron1.py >> logs/cron1.log 2>&1 || true
 
-      - name: Upload data artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: sports-gambling-data
-          path: data/
-          retention-days: 7
+      - name: Show generated files
+        run: |
+          echo "Listing files in data/"
+          ls -R data || echo "No data folder found"
+          echo "Listing logs/"
+          ls -R logs || echo "No logs found"
 
       - name: Upload log artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: sports-gambling-log
-          path: logs/cron1.log
+          path: logs/
+          retention-days: 7
+
+      - name: Upload data artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sports-gambling-data
+          path: data/
           retention-days: 7
