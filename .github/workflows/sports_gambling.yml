@@ -2,8 +2,8 @@ name: Run cron1 every 2 hours
 
 on:
   schedule:
-    - cron: "0 */2 * * *"
-  workflow_dispatch:
+    - cron: "0 */2 * * *"   # every 2 hours
+  workflow_dispatch:          # allows manual trigger
 
 jobs:
   run-script:
@@ -23,12 +23,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas requests
 
-      - name: Run cron1.py and print logs
+      - name: Run cron1.py and save logs
         env:
           ODDS_1: ${{ secrets.ODDS_1 }}
           ODDS_2: ${{ secrets.ODDS_2 }}
         run: |
           mkdir -p logs
-          echo "Running script..."
+          mkdir -p data
+          echo "Running cron1.py..."
           python scripts/cron1.py | tee logs/cron1.log
           echo "=== END OF LOG OUTPUT ==="
+
+      - name: Upload data artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sports-gambling-data
+          path: data/
+          retention-days: 7
+
+      - name: Upload log artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sports-gambling-log
+          path: logs/cron1.log
+          retention-days: 7
