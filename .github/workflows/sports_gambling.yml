@@ -28,11 +28,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas requests
 
-      # Step 4: Setup SSH for pushing
+      # Step 4: Setup SSH
       - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.8.1
+        uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+
 
       # Step 5: Run cron1.py
       - name: Run cron1.py
